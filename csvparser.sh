@@ -89,3 +89,5 @@ esac
 		fi
 
 	done <"$MyFile"
+
+rm "$MyTempFile"
