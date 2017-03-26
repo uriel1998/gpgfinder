@@ -1,0 +1,51 @@
+Steps:
+
+1.  Find email addresses and real name in CSV/VCF
+
+##google.csv
+Name=Column 1
+Email=Column 29
+cat google.csv | awk -F ',' '{print $1 $29}'
+
+
+##outlook.csv
+FName=Column 1
+LName=Column 3
+Email=Column 15
+cat contacts.csv | awk -F ',' '{print $1 $2   $15}'
+
+##VCF
+cat contacts.vcf | grep EMAIL | awk -F ':' '{print $2}'
+
+
+2.  Search via WGET or CURL to defined repositories
+
+windows test for path:
+set FOUND=
+for %%e in (%PATHEXT%) do (
+  for %%X in (myExecutable%%e) do (
+    if not defined FOUND (
+      set FOUND=%%~$PATH:X
+    )
+  )
+)
+
+
+wget -q -O - http://pgp.mit.edu:11371/pks/lookup?search=$EMAIL
+curl -s wget -q -O - http://pgp.mit.edu:11371/pks/lookup?search=$EMAIL
+
+###matching string
+
+| grep pub | awk -F '>' '{print $2}' | awk -F '<' '{print $1}'
+
+
+
+3.  Use first match
+4.  Add 0x to beginning of match
+5.  Add to keychain
+
+gpg --keyserver hkp://pgp.mit.edu --recv-keys 0xDD2F731F
+
+
+
+echo "test" | gpg -ase -r 0xDD2F731F | gpg
