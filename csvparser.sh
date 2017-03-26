@@ -1,5 +1,13 @@
 #!/bin/bash
 
+
+########################################################################
+# This simply pulls full names and e-mail addresses from addressbooks
+# Currently implemented
+# Google Contacts CSV export
+########################################################################
+
+
 # csv.awk from http://lorance.freeshell.org/csv/ where it's in the
 # public domain
 
@@ -20,11 +28,11 @@
  	
 	#header row - number of columns there should be.
 	numcols=$(head -n 1 $1 | grep -o $div | wc -l)
-	echo $numcols
+	#echo $numcols
 	if [ $numcols = 86 ];then
 		CSVType=$(head -n 1 $1 | awk -f csv.awk | awk -F"|"  '{print $30}')
 		if [ "$CSVType" == "E-mail 1 - Value" ];then
-			echo "Google Contacts CSV export detected"
+			echo "### Google Contacts CSV export detected"
 		fi
 	fi
 
@@ -42,8 +50,7 @@
 			# Testing for header line
 			if [ "$Name" != "Name" ]; then			
 				if [ "$Email" != "" ]; then
-				echo "$Name"
-				echo "$Email"
+				echo "$Name $Email" | awk '{print $1 "," $2 "," $3}'
 				fi
 			fi
 		fi

@@ -1,4 +1,11 @@
+* GUI output (zenity, wenity, etc)
+* VCF input
+* CSF input from outloook
+* Windows versions
+
+
 Steps:
+
 
 1.  Find email addresses and real name in CSV/VCF
 

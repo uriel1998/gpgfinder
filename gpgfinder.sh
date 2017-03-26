@@ -113,37 +113,43 @@ fi
 			s_name=$(echo "$s_reply" | awk -F '>' '{print $4}' | awk -F '&' '{print $1}')
 			s_email=$(echo "$s_reply" | awk -F ';' '{print $4}' | awk -F '&' '{print $1}')
 			
-			echo "$s_short_key"
-			# We want to use full keys as indicated by some other security person elsewhere 
-			# to avoid collisions
-			echo "$s_full_key"
-			echo "$s_name@" 
-			echo "$s_email"
+			if [ "$s_short_key" == "" ]; then
+				echo "No match for $UserAddress found at $KeyServer"
+			else
+				#echo "$s_short_key"
+				# We want to use full keys as indicated by some other security person elsewhere 
+				# to avoid collisions
+				#echo "$s_full_key"
+				#echo "$s_name" 
+				#echo "$s_email"
 
-			s_name=$(pass_back_a_string "$s_name")
-			s_email=$(pass_back_a_string "$s_email")
+				s_name=$(pass_back_a_string "$s_name")
+				s_email=$(pass_back_a_string "$s_email")
 
 
-			# matching primary address and name variable
+				# matching primary address and name variable
 
-			match=0
+				match=0
 
-			if [[ "$UserAddress" == "$s_email" ]];then
-				((match++))
+				if [[ "$UserAddress" == "$s_email" ]];then
+					((match++))
+				fi
+				if [[ "$FullName" == "$s_name" ]];then
+					((match++))
+				fi
+				
+				case $match in
+					1) echo "### Partial Match Found for $UserAddress" 
+						echo "### Partial matching with user input not yet implemented"
+					
+					;;
+					2) echo "### Full Match Found; Adding Key To Keychain" 
+						returncode=$(gpg --keyserver hkp://"$KeyServer" --recv-keys "$s_full_key")
+						echo "$returncode"
+					;;
+					*);;
+				esac
 			fi
-			if [[ "$FullName" == "$s_name" ]];then
-				((match++))
-			fi
-			
-			case $match in
-				1) echo "### Partial Match Found" ;;
-				2) echo "### Full Match Found; Adding Key To Keychain" 
-					returncode=$(gpg --keyserver hkp://"$KeyServer" --recv-keys "$s_full_key")
-					echo "$returncode"
-				;;
-				*);;
-			esac
-
 
 ################################################################################
 # Example returned data
