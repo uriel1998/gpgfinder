@@ -1,4 +1,6 @@
 # Compiled source #
 ###################
-.csv
-.vcf
+*.csv
+*.vcf
+/contactfiles*
+/contactfiles/*
