@@ -58,9 +58,9 @@ $PWD/csvparser.sh "$CSVFile" | grep -v "^###" > "$MyTempFile"
 
 while read line; do
 
-	FN=$(echo "$line" | awk -F "," '{ print $1 }')
-	LN=$(echo "$line" | awk -F "," '{ print $2 }')
-	EM=$(echo "$line" | awk -F "," '{ print $3 }')	
+	FN=$(echo "$line" | awk -F ";" '{ print $1 }')
+	LN=$(echo "$line" | awk -F ";" '{ print $2 }')
+	EM=$(echo "$line" | awk -F ";" '{ print $3 }')	
 	$PWD/gpgfinder.sh --firstname="$FN" --lastname="$LN" --email="$EM" --keyserver="$KeyServer"
 
 done <"$MyTempFile"

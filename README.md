@@ -6,6 +6,9 @@ CSV.AWK is taken from [this public domain script](http://lorance.freeshell.org/c
 
 Dependencies
 
-AWK
-Bash (possibly other SH variants; I haven't tested)
-wget (curl functionality is commented out but is in code)
+AWK  
+Bash (possibly other SH variants; I haven't tested)  
+wget (curl functionality is commented out but is in code)  
+
+file   (GNU coreutils)  
+iconv (GNU coreutils, I think)  
