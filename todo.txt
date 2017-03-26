@@ -2,7 +2,9 @@
 * VCF input
 * CSF input from outloook
 * Windows versions
-
+* Partial matches
+* Matches off secondary, tertiary e-mail address
+* submit YOUR key to a keyserver if not already there
 
 Steps:
 
