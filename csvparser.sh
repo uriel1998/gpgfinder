@@ -41,7 +41,7 @@
 EncodingA=$(file -i "$1" | awk -F "charset=" '{print $2}')
 case "$EncodingA" in
 	"utf-16le") 
-		iconv -f UTF16LE "$1" -o "$MyTempFile"
+		iconv -sc -f UTF16LE "$1" -o "$MyTempFile"
 		MyFile="$MyTempFile"	
 		;;
 	"utf-8")
