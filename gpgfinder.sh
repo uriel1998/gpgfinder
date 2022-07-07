@@ -25,7 +25,7 @@ Scratch="$@"
 ########################################################################
 
 function helpus() {
-    echo "gpgfinder --email=emailaddress --file=file [ --keyserver=keyserver ]"
+    echo "gpgfinder --email=emailaddress --file=file"
     exit
 }
 
@@ -47,11 +47,6 @@ if [[ "$@" =~ "--help" ]]; then
     helpus
 fi
 
-if [[ "$@" =~ "--email=" ]]; then
-    UserAddress=$(echo "$Scratch" | awk -F "--email=" '{print $2}'| awk '{print $1}' )
-    UserAddress=$(pass_back_a_string "$UserAddress")
-fi
-
 if [[ "$@" =~ "--file=" ]]; then
     ContactsFile=$(echo "$Scratch" | awk -F "--file=" '{print $2}'| awk '{print $1}' )
     if [ ! -f "${ContactsFile}" ];then
@@ -60,25 +55,12 @@ if [[ "$@" =~ "--file=" ]]; then
     fi
 fi
 
-
-KeyServer0=""
-
-if [[ "$@" =~ "--keyserver=" ]]; then
-    KeyServer0=$(echo "$Scratch" | awk -F "--keyserver=" '{print $2}'| awk '{print $1}')
-fi
-
-KeyServer3=$(echo "hkps://keys.mailvelope.com")
+#KeyServer4=$(echo "hkps://keyserver.pgp.com")
+#KeyServer3=$(echo "hkps://pgp.mit.edu")
 KeyServer2=$(echo "hkps://keyserver.ubuntu.com")
-KeyServer1=$(echo "hkps://pgp.mit.edu")
+KeyServer1=$(echo "hkps://keys.mailvelope.com")
+KeyServer0=$(echo "hkps://keys.openpgp.org")
 
-if [ -n "${UserAddress}"];then
-    if [ "$KeyServer0" != "" ];then
-        gpg --auto-key-locate clear,"${KeyServer0}" --locate-external-keys "${UserAddress}"
-    fi
-    gpg --auto-key-locate clear,"${KeyServer1}" --locate-external-keys "${UserAddress}"
-    gpg --auto-key-locate clear,"${KeyServer2}" --locate-external-keys "${UserAddress}"
-    gpg --auto-key-locate clear,"${KeyServer3}" --locate-external-keys "${UserAddress}"
-fi
 
 MyEmails=$(grep EMAIL "${ContactsFile}" | grep -v no-reply | grep -v @nowhere.invalid | grep -v example | awk -F ':' '{print $2}' | sort | uniq | tr -cd "[:print:]\n")
 
@@ -90,8 +72,6 @@ while read -r line; do
     #gpg --auto-key-locate clear,hkps://keys.mailvelope.com --locate-external-keys aackswriter@gmail.com
     #gpg --auto-key-locate clear,hkps://keys.mailvelope.com --locate-external-keys ${line}
     # Okay, maybe this needs to run as a subshell?
-    # slowing so I don't flood
-    sleep 10
     result=1
     if [ "$KeyServer0" != "" ];then
         echo "Checking for ${line} at ${KeyServer0}"
@@ -106,13 +86,11 @@ while read -r line; do
         if [ $result != 0 ];then
             echo "Checking for ${line} at ${KeyServer2}"
             gpg --auto-key-locate clear,"${KeyServer2}" --locate-external-keys "${line}"
-            result=$?
-            if [ $result != 0 ];then
-                echo "Checking for ${line} at ${KeyServer3}"
-                gpg --auto-key-locate clear,"${KeyServer3}" --locate-external-keys "${line}"
-            fi
         fi
     fi
+    # slowing so I don't flood
+    echo "###################################Pausing to avoid flooding ########"
+    sleep 10
 
 done <<< "${MyEmails}"
 IFS=$SAVEIFS
