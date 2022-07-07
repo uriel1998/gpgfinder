@@ -67,38 +67,52 @@ if [[ "$@" =~ "--keyserver=" ]]; then
     KeyServer0=$(echo "$Scratch" | awk -F "--keyserver=" '{print $2}'| awk '{print $1}')
 fi
 
-KeyServer1=$(echo "hkps://keys.mailvelope.com")
-KeyServer2=$(echo "https://keyserver.ubuntu.com")
-KeyServer3=$(echo "https://pgp.mit.edu")
+KeyServer3=$(echo "hkps://keys.mailvelope.com")
+KeyServer2=$(echo "hkps://keyserver.ubuntu.com")
+KeyServer1=$(echo "hkps://pgp.mit.edu")
 
 if [ -n "${UserAddress}"];then
     if [ "$KeyServer0" != "" ];then
-        gpg --auto-key-locate clear,"{$KeyServer0}" --locate-external-keys "${UserAddress}"
+        gpg --auto-key-locate clear,"${KeyServer0}" --locate-external-keys "${UserAddress}"
     fi
-    gpg --auto-key-locate clear,"{$KeyServer1}" --locate-external-keys "${UserAddress}"
-    gpg --auto-key-locate clear,"{$KeyServer2}" --locate-external-keys "${UserAddress}"
-    gpg --auto-key-locate clear,"{$KeyServer3}" --locate-external-keys "${UserAddress}"
+    gpg --auto-key-locate clear,"${KeyServer1}" --locate-external-keys "${UserAddress}"
+    gpg --auto-key-locate clear,"${KeyServer2}" --locate-external-keys "${UserAddress}"
+    gpg --auto-key-locate clear,"${KeyServer3}" --locate-external-keys "${UserAddress}"
 fi
 
-MyEmails=$(grep EMAIL "${ContactsFile}" | grep -v no-reply | grep -v @nowhere.invalid | grep -v example | awk -F ':' '{print $2}' | sort | uniq )
+MyEmails=$(grep EMAIL "${ContactsFile}" | grep -v no-reply | grep -v @nowhere.invalid | grep -v example | awk -F ':' '{print $2}' | sort | uniq | tr -cd "[:print:]\n")
 
 
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 
 while read -r line; do 
-    echo "${line}"
     #gpg --auto-key-locate clear,hkps://keys.mailvelope.com --locate-external-keys aackswriter@gmail.com
-    gpg --auto-key-locate clear,hkps://keys.mailvelope.com --locate-external-keys ${line}
+    #gpg --auto-key-locate clear,hkps://keys.mailvelope.com --locate-external-keys ${line}
     # Okay, maybe this needs to run as a subshell?
-    
-    
+    # slowing so I don't flood
+    sleep 10
+    result=1
     if [ "$KeyServer0" != "" ];then
-        gpg --auto-key-locate clear,"{$KeyServer0}" --locate-external-keys "${line}"
+        echo "Checking for ${line} at ${KeyServer0}"
+        gpg --auto-key-locate clear,"${KeyServer0}" --locate-external-keys "${line}"
+        result=$?
     fi
-    #gpg --auto-key-locate clear,"{$KeyServer1}" --locate-external-keys "${line}"
-    #gpg --auto-key-locate clear,"{$KeyServer2}" --locate-external-keys "${line}"
-    #gpg --auto-key-locate clear,"{$KeyServer3}" --locate-external-keys "${line}"
+    if [ $result != 0 ];then
+        echo "Checking for ${line} at ${KeyServer1}"
+        #gpg --auto-key-locate clear,hkps://pgp.mit.edu --locate-external-keys steven@stevesaus.com
+        gpg --auto-key-locate clear,"${KeyServer1}" --locate-external-keys "${line}"
+        result=$?
+        if [ $result != 0 ];then
+            echo "Checking for ${line} at ${KeyServer2}"
+            gpg --auto-key-locate clear,"${KeyServer2}" --locate-external-keys "${line}"
+            result=$?
+            if [ $result != 0 ];then
+                echo "Checking for ${line} at ${KeyServer3}"
+                gpg --auto-key-locate clear,"${KeyServer3}" --locate-external-keys "${line}"
+            fi
+        fi
+    fi
 
 done <<< "${MyEmails}"
 IFS=$SAVEIFS
