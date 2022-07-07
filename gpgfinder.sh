@@ -88,9 +88,6 @@ while read -r line; do
             gpg --auto-key-locate clear,"${KeyServer2}" --locate-external-keys "${line}"
         fi
     fi
-    # slowing so I don't flood
-    echo "###################################Pausing to avoid flooding ########"
-    sleep 10
 
 done <<< "${MyEmails}"
 IFS=$SAVEIFS
