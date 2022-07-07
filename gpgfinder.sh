@@ -80,13 +80,25 @@ if [ -n "${UserAddress}"];then
     gpg --auto-key-locate clear,"{$KeyServer3}" --locate-external-keys "${UserAddress}"
 fi
 
-MyEmails=$(grep EMAIL "${ContactsFile}" | grep -v no-reply | grep -v @nowhere.invalid | awk -F ':' '{print $2}' | sort | uniq )
+MyEmails=$(grep EMAIL "${ContactsFile}" | grep -v no-reply | grep -v @nowhere.invalid | grep -v example | awk -F ':' '{print $2}' | sort | uniq )
+
 
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 
 while read -r line; do 
-    echo -e "${line}"
-    line=""
-done < "${MyEmails}"
+    echo "${line}"
+    #gpg --auto-key-locate clear,hkps://keys.mailvelope.com --locate-external-keys aackswriter@gmail.com
+    gpg --auto-key-locate clear,hkps://keys.mailvelope.com --locate-external-keys ${line}
+    # Okay, maybe this needs to run as a subshell?
+    
+    
+    if [ "$KeyServer0" != "" ];then
+        gpg --auto-key-locate clear,"{$KeyServer0}" --locate-external-keys "${line}"
+    fi
+    #gpg --auto-key-locate clear,"{$KeyServer1}" --locate-external-keys "${line}"
+    #gpg --auto-key-locate clear,"{$KeyServer2}" --locate-external-keys "${line}"
+    #gpg --auto-key-locate clear,"{$KeyServer3}" --locate-external-keys "${line}"
+
+done <<< "${MyEmails}"
 IFS=$SAVEIFS
