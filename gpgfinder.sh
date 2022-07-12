@@ -46,16 +46,24 @@ option="$1"
             ;;
         -f)
             shift
-            ContactsFile="$1"
-            if [ ! -f "${ContactsFile}" ];then
-                echo "Contacts File Not a File"
-                exit 99
+            ContactsFile="${1}"
+            shift
+            ;;
+        *)
+            if [ -f "${1}" ];then
+                ContactsFile="$1"
             fi
             shift
             ;;
     esac
     
 done
+
+
+if [ ! -f "${ContactsFile}" ];then
+    echo "Contacts File Not a File"
+    exit 99
+fi
 
 
 
@@ -72,7 +80,7 @@ while read -r line; do
     if [[ "$KnownKeys" == *"$line"* ]]; then
         echo "$line is a known key."
     else
-
+        
 
         result=1
         echo "Checking for ${line} at ${KeyServer0}"
