@@ -1,6 +1,6 @@
 # gpgfinder
 
-Interface to find and add GPG signatures from keyservers
+Find and add GPG signatures from keyservers from exported addressbook
 
 
 ## Discussion
@@ -19,18 +19,7 @@ I had no idea who - if anyone - in my address book had registered their GPG key 
 
 That's what originally inspired this tool.
 
+It's just a bash script (and a little awk / grep) to get email addresses from a VCF file and then query several public keyservers, and then save whether or not it found matches.  
 
-CSV.AWK is taken from [this public domain script](http://lorance.freeshell.org/csv/).
+./gpgfinder.sh -f /path/to/vcf_file.vcf
 
-Dependencies
-
-AWK  
-Bash (possibly other SH variants; I haven't tested)  
-wget (curl functionality is commented out but is in code)  
-
-file   (GNU coreutils)  
-iconv (GNU coreutils, I think)  
-
-
-hkps://keys.mailvelope.com
-https://keyserver.ubuntu.com
