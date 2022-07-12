@@ -1,31 +1,24 @@
 #!/bin/bash
 
 ########################################################################
-# Requires awk
-# gpgfinder --email=emailaddress [ --firstname=firstname --lastname=lastname ] [ --keyserver=keyserver ]
+# Requires grep
+# gpgfinder -f [VCF contact file]
 #
-# Default Keyserver is pgp.mit.edu
+# Looks across multiple keyservers
 #
-# Currently only adds key to keychain if email and full name match
-# Not case sensitive
 ########################################################################
 
-########################################################################
-# Declarations
-########################################################################
-
-declare UserAddress
-declare KeyServer
 declare ContactsFile
-Scratch="$@"
-# ToDo - use this to make it know where to output match queries.
 
-########################################################################
-# Help String
-########################################################################
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+KeyServer3="hkps://pgp.mit.edu"
+KeyServer2="hkps://keyserver.ubuntu.com"
+KeyServer1="hkps://keys.mailvelope.com"
+KeyServer0="hkps://keys.openpgp.org"
 
-function helpus() {
-    echo "gpgfinder --email=emailaddress --file=file"
+
+function help() {
+    echo "gpgfinder -f [VCF file]"
     exit
 }
 
@@ -37,29 +30,33 @@ function pass_back_a_string() {
     echo "$localvar"
 }
 
+KnownKeys=$(gpg --list-keys | grep uid | grep -v revoked | grep -v expired | grep @ | awk -F '<' '{print $2}'| awk -F '>' '{print $1}')
+
 
 ########################################################################
 # Parse the arguments
 ########################################################################
 
+while [ $# -gt 0 ]; do
+option="$1"
+    case $option in
+        -h)
+            help
+            exit
+            ;;
+        -f)
+            shift
+            ContactsFile="$1"
+            if [ ! -f "${ContactsFile}" ];then
+                echo "Contacts File Not a File"
+                exit 99
+            fi
+            shift
+            ;;
+    esac
+    
+done
 
-if [[ "$@" =~ "--help" ]]; then
-    helpus
-fi
-
-if [[ "$@" =~ "--file=" ]]; then
-    ContactsFile=$(echo "$Scratch" | awk -F "--file=" '{print $2}'| awk '{print $1}' )
-    if [ ! -f "${ContactsFile}" ];then
-        echo "Contacts File Not a File"
-        exit 99
-    fi
-fi
-
-#KeyServer4=$(echo "hkps://keyserver.pgp.com")
-#KeyServer3=$(echo "hkps://pgp.mit.edu")
-KeyServer2=$(echo "hkps://keyserver.ubuntu.com")
-KeyServer1=$(echo "hkps://keys.mailvelope.com")
-KeyServer0=$(echo "hkps://keys.openpgp.org")
 
 
 MyEmails=$(grep EMAIL "${ContactsFile}" | grep -v no-reply | grep -v @nowhere.invalid | grep -v example | awk -F ':' '{print $2}' | sort | uniq | tr -cd "[:print:]\n")
@@ -72,22 +69,42 @@ while read -r line; do
     #gpg --auto-key-locate clear,hkps://keys.mailvelope.com --locate-external-keys aackswriter@gmail.com
     #gpg --auto-key-locate clear,hkps://keys.mailvelope.com --locate-external-keys ${line}
     # Okay, maybe this needs to run as a subshell?
-    result=1
-    if [ "$KeyServer0" != "" ];then
+    if [[ "$KnownKeys" == *"$line"* ]]; then
+        echo "$line is a known key."
+    else
+
+
+        result=1
         echo "Checking for ${line} at ${KeyServer0}"
         gpg --auto-key-locate clear,"${KeyServer0}" --locate-external-keys "${line}"
         result=$?
-    fi
-    if [ $result != 0 ];then
-        echo "Checking for ${line} at ${KeyServer1}"
-        #gpg --auto-key-locate clear,hkps://pgp.mit.edu --locate-external-keys steven@stevesaus.com
-        gpg --auto-key-locate clear,"${KeyServer1}" --locate-external-keys "${line}"
-        result=$?
         if [ $result != 0 ];then
-            echo "Checking for ${line} at ${KeyServer2}"
-            gpg --auto-key-locate clear,"${KeyServer2}" --locate-external-keys "${line}"
+            echo "Checking for ${line} at ${KeyServer1}"
+            #gpg --auto-key-locate clear,hkps://pgp.mit.edu --locate-external-keys steven@stevesaus.com
+            gpg --auto-key-locate clear,"${KeyServer1}" --locate-external-keys "${line}"
+            result=$?
+            if [ $result != 0 ];then
+                echo "Checking for ${line} at ${KeyServer2}"
+                gpg --auto-key-locate clear,"${KeyServer2}" --locate-external-keys "${line}"
+                result=$?
+                if [ $result != 0 ];then
+                    echo "Checking for ${line} at ${KeyServer3}"
+                    gpg --auto-key-locate clear,"${KeyServer3}" --locate-external-keys "${line}"
+                    result=$?
+                    if [ $result != 0 ];then
+                        echo "${line}" >> "${SCRIPT_DIR}"/match_no.txt
+                    else
+                        echo "${line}" >> "${SCRIPT_DIR}"/match_yes.txt
+                    fi
+                else
+                    echo "${line}" >> "${SCRIPT_DIR}"/match_yes.txt
+                fi
+            else
+                echo "${line}" >> "${SCRIPT_DIR}"/match_yes.txt
+            fi
+        else
+            echo "${line}" >> "${SCRIPT_DIR}"/match_yes.txt
         fi
     fi
-
 done <<< "${MyEmails}"
 IFS=$SAVEIFS
